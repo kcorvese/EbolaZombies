@@ -14,6 +14,7 @@ public class PlayerBehavior : MonoBehaviour
     public Camera mainCamera;
     public CharacterController cController;
 
+    private MouseLook mouse;
     private CharacterMotor chMotor;
     //private Transform tr;
     private float dist; // distance to ground
@@ -22,11 +23,14 @@ public class PlayerBehavior : MonoBehaviour
     private bool reloading = false;
     private bool crouching = false;
 
+    private int health = 100;
+
     // Use this for initialization
     void Start()
     {
         Screen.lockCursor = true;
 
+        mouse = Camera.main.GetComponent<MouseLook>();
         chMotor = GetComponent<CharacterMotor>();
         //tr = transform;
         //CharacterController ch = GetComponent<CharacterController>();
@@ -34,8 +38,16 @@ public class PlayerBehavior : MonoBehaviour
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
+        if (health <= 0) 
+        { 
+            Time.timeScale = 0; 
+            chMotor.canControl = false;
+            //mouse.moveMouse = false;
+            return; 
+        }
+
         //float vScale = 1.0f;
         float speed = walkSpeed;
 
@@ -45,7 +57,7 @@ public class PlayerBehavior : MonoBehaviour
 
             if (!anims.IsPlaying(anim) && anims.Play(anim))
             {
-                RaycastHit hit = RayCast.Raycast();
+                RaycastHit hit = RayCast.Raycast(GameObject.Find("flashlight").transform, 100);
 
                 GameObject objHit = hit.transform.gameObject;
 
@@ -89,25 +101,23 @@ public class PlayerBehavior : MonoBehaviour
         }
 
         chMotor.movement.maxForwardSpeed = speed;
-        /*vScale = (crouching) ? 0.5f : 1.0f;
-        speed = (crouching) ? crchSpeed : walkSpeed; // slow down when crouching
-
-        chMotor.movement.maxForwardSpeed = speed; // set max speed
-        float ultScale = tr.localScale.y; // crouch/stand up smoothly 
-
-        Vector3 tmpScale = tr.localScale;
-        Vector3 tmpPosition = tr.position;
-
-        tmpScale.y = Mathf.Lerp(tr.localScale.y, vScale, 5 * Time.deltaTime);
-        tr.localScale = tmpScale;
-
-        tmpPosition.y += dist * (tr.localScale.y - ultScale); // fix vertical position        
-        tr.position = tmpPosition;*/
         if (!anims.IsPlaying("shoot") && !anims.IsPlaying("shoot_zoom") && !anims.IsPlaying("reload") && !anims.IsPlaying("unzoom") && !anims.IsPlaying("zoom")) anims.Play("idle");
     }
 
-    void OnCollisionEnter(Collision col)
+    void OnGUI()
     {
+        if (health > 0) return;
 
+        string text = "You died!";
+        Vector2 textDims = GUI.skin.label.CalcSize(new GUIContent(text));
+        float x = (Screen.width / 2) - (textDims.x / 2);
+        float y = (Screen.height / 2) - (textDims.y / 2);
+
+        GUI.Label(new Rect(x, y, Screen.width, 100), text);
+    }
+
+    public void TakeDamage(int damage)
+    {
+        health -= damage;
     }
 }

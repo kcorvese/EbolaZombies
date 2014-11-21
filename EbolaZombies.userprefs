@@ -1,0 +1,16 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\scripts\ZombieAI.cs">
+    <Files>
+      <File FileName="Assets\scripts\LevelSwitch.cs" Line="6" Column="2" />
+      <File FileName="Assets\scripts\PlayerBehavior.cs" Line="38" Column="6" />
+      <File FileName="Assets\scripts\ClockScript.cs" Line="16" Column="4" />
+      <File FileName="Assets\scripts\Utilities.cs" Line="106" Column="15" />
+      <File FileName="Assets\scripts\ZombieAI.cs" Line="69" Column="2" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

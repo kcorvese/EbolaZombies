@@ -1,12 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Pathfinding;
+using Utilities;
 
 public class ZombieAI : MonoBehaviour
 {
     public Seeker seeker;
     public Animation anims;
     public Transform player;
+    public PlayerBehavior playerScript;
 
     private AIPath ai;
 
@@ -38,10 +40,19 @@ public class ZombieAI : MonoBehaviour
 
         //Debug.Log(dist);
 
-        if (dist > 3) anims.Play("walk02");
+        if (dist > 3) anims.Play("run");
         else
         {
-            anims.Play("attack02");
+            if(anims.Play("attack02"))
+            {
+                RaycastHit ray = RayCast.Raycast(transform, player, 3);
+
+                if(ray.transform.gameObject.tag == "Player")
+                {
+                    Debug.Log("hit player");
+                    playerScript.TakeDamage(100);
+                }
+            }
         }
         ai.canMove = (dist > 3);
     }
