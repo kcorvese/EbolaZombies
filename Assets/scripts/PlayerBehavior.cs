@@ -4,120 +4,116 @@ using Utilities;
 
 public class PlayerBehavior : MonoBehaviour
 {
-    public float walkSpeed = 7; // regular speed
-    public float crchSpeed = 3; // crouching speed
-    public float runSpeed = 20; // run speed
+     public float walkSpeed = 7; // regular speed
+     public float crchSpeed = 3; // crouching speed
+     public float runSpeed = 20; // run speed
 
-    public Animation anims;
-    public ParticleSystem particle;
-     
-    public Camera mainCamera;
-    public CharacterController cController;
+     public Animation anims;
+     public ParticleSystem particle;
 
-    private MouseLook mouse;
-    private CharacterMotor chMotor;
-    //private Transform tr;
-    private float dist; // distance to ground
+     public Camera mainCamera;
+     public CharacterController cController;
 
-    private bool zoomed = false;
-    private bool reloading = false;
-    private bool crouching = false;
+     //private MouseLook mouse;
+     private CharacterMotor chMotor;
 
-    private int health = 100;
+     private bool zoomed = false;
+     private bool reloading = false;
+     private bool crouching = false;
 
-    // Use this for initialization
-    void Start()
-    {
-        Screen.lockCursor = true;
+     private int health = 100;
 
-        mouse = Camera.main.GetComponent<MouseLook>();
-        chMotor = GetComponent<CharacterMotor>();
-        //tr = transform;
-        //CharacterController ch = GetComponent<CharacterController>();
-        //dist = ch.height / 2; // calculate distance to ground
-    }
+     // Use this for initialization
+     void Start()
+     {
+          Screen.lockCursor = true;
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (health <= 0) 
-        { 
-            Time.timeScale = 0; 
-            chMotor.canControl = false;
-            //mouse.moveMouse = false;
-            return; 
-        }
+          //mouse = Camera.main.GetComponent<MouseLook>();
+          chMotor = GetComponent<CharacterMotor>();
+     }
 
-        //float vScale = 1.0f;
-        float speed = walkSpeed;
+     // Update is called once per frame
+     void Update()
+     {
+          if (health <= 0)
+          {
+               Time.timeScale = 0;
+               chMotor.canControl = false;
+               return;
+          }
 
-        if (Input.GetButton("Fire1"))
-        {
-            string anim = (zoomed) ? "shoot_zoom" : "shoot";
+          //float vScale = 1.0f;
+          float speed = walkSpeed;
 
-            if (!anims.IsPlaying(anim) && anims.Play(anim))
-            {
-                RaycastHit hit = RayCast.Raycast(GameObject.Find("flashlight").transform, 100);
+          if (Input.GetButton("Fire1"))
+          {
+               string anim = (zoomed) ? "shoot_zoom" : "shoot";
 
-                GameObject objHit = hit.transform.gameObject;
+               if (!anims.IsPlaying(anim) && anims.Play(anim))
+               {
+                    RaycastHit hit = RayCast.Raycast(GameObject.Find("flashlight").transform, 100);
 
-                if(objHit.tag == "Zombie")
-                {
-                    ZombieAI zombie = objHit.GetComponent<ZombieAI>();
-                    if (!zombie.isDead()) zombie.TakeDamage();
-                }
-            }
-        }
+                    GameObject objHit = hit.transform.gameObject;
 
-        if (Input.GetButton("Sprint") && !crouching) speed = runSpeed;
+                    ZombieAI zombie = objHit.GetComponentInParent<ZombieAI>();
 
-        if (Input.GetButtonDown("Crouch")) crouching = !crouching;
+                    if (!zombie.isDead())
+                    {
+                         if (objHit.tag == "ZombieHead") zombie.TakeDamage(60);
+                         if (objHit.tag == "ZombieCollider") zombie.TakeDamage(40);
+                    }
+               }
+          }
 
-        if (Input.GetButton("Reload") || (Input.GetButton("Crouch") && Input.GetButton("Reload")))
-        {
-            if (zoomed)
-            {
-                anims.Play("unzoom");
-                anims.PlayQueued("reload");
-                zoomed = false;
-            }
-            anims.Play("reload");
-        }
+          if (Input.GetButton("Sprint") && !crouching) speed = runSpeed;
 
-        if (anims.IsPlaying("reload")) reloading = true;
-        else reloading = false;
+          if (Input.GetButtonDown("Crouch")) crouching = !crouching;
 
-        if (Input.GetMouseButton(1))
-        {
-            if (zoomed || reloading) return;
-            anims.Play("zoom");
-            zoomed = true;
-        }
-        else
-        {
-            if (!zoomed) return;
-            anims.Play("unzoom");
-            zoomed = false;
-        }
+          if (Input.GetButton("Reload") || (Input.GetButton("Crouch") && Input.GetButton("Reload")))
+          {
+               if (zoomed)
+               {
+                    anims.Play("unzoom");
+                    anims.PlayQueued("reload");
+                    zoomed = false;
+               }
+               anims.Play("reload");
+          }
 
-        chMotor.movement.maxForwardSpeed = speed;
-        if (!anims.IsPlaying("shoot") && !anims.IsPlaying("shoot_zoom") && !anims.IsPlaying("reload") && !anims.IsPlaying("unzoom") && !anims.IsPlaying("zoom")) anims.Play("idle");
-    }
+          if (anims.IsPlaying("reload")) reloading = true;
+          else reloading = false;
 
-    void OnGUI()
-    {
-        if (health > 0) return;
+          if (Input.GetMouseButton(1))
+          {
+               if (zoomed || reloading) return;
+               anims.Play("zoom");
+               zoomed = true;
+          }
+          else
+          {
+               if (!zoomed) return;
+               anims.Play("unzoom");
+               zoomed = false;
+          }
 
-        string text = "You died!";
-        Vector2 textDims = GUI.skin.label.CalcSize(new GUIContent(text));
-        float x = (Screen.width / 2) - (textDims.x / 2);
-        float y = (Screen.height / 2) - (textDims.y / 2);
+          chMotor.movement.maxForwardSpeed = speed;
+          if (!anims.IsPlaying("shoot") && !anims.IsPlaying("shoot_zoom") && !anims.IsPlaying("reload") && !anims.IsPlaying("unzoom") && !anims.IsPlaying("zoom")) anims.Play("idle");
+     }
 
-        GUI.Label(new Rect(x, y, Screen.width, 100), text);
-    }
+     void OnGUI()
+     {
+          if (health > 0) return;
 
-    public void TakeDamage(int damage)
-    {
-        health -= damage;
-    }
+          string text = "You died!";
+          Vector2 textDims = GUI.skin.label.CalcSize(new GUIContent(text));
+          float x = (Screen.width / 2) - (textDims.x / 2);
+          float y = (Screen.height / 2) - (textDims.y / 2);
+
+          GUI.Label(new Rect(x, y, Screen.width, 100), text);
+     }
+
+     public void TakeDamage(int damage)
+     {
+          health -= damage;
+     }
 }

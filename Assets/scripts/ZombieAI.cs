@@ -3,67 +3,103 @@ using System.Collections;
 using Pathfinding;
 using Utilities;
 
+[RequireComponent(typeof(Seeker))]
+[RequireComponent(typeof(Animation))]
 public class ZombieAI : MonoBehaviour
 {
-    public Seeker seeker;
-    public Animation anims;
-    public Transform player;
-    public PlayerBehavior playerScript;
+     public enum AIState
+     {
+          IDLE,
+          CHASE,
+          ATTACK,
+          WALK_AROUND,
+          DEAD
+     }
 
-    private AIPath ai;
+     [System.NonSerialized]
+     public AIState state = AIState.WALK_AROUND;
 
-    int health = 100;
+     [System.NonSerialized]
+     public Seeker seeker;
 
-    // Use this for initialization
-    void Start()
-    {
-        ai = GameObject.Find("tyrant _zombie").GetComponent<AIPath>();
-    }
+     private Transform player;
+     private PlayerBehavior playerScript;
 
-    bool dead = false;
+     private AIPath ai;
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (health <= 0)
-        {
-            if (!dead) { anims.Play("death"); dead = true; }
+     int health = 100;
 
-            //if(!anims.IsPlaying("death")) Destroy(this.gameObject);
-            ai.canSearch = false;
-            return;
-        }
+     // Use this for initialization
+     void Start()
+     {
+          ai = GetComponent<AIPath>();
+          seeker = GetComponent<Seeker>();
+          player = GameObject.FindGameObjectWithTag("Player").transform;
+          playerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerBehavior>();
 
-        if (anims.IsPlaying("damage02") || anims.IsPlaying("attack02")) return;
+          ai.target = player;
+     }
 
-        float dist = Vector3.Distance(this.transform.position, player.position);
+     bool dead = false;
 
-        //Debug.Log(dist);
+     // Update is called once per frame
+     void Update()
+     {
+          AIState state = getState();
 
-        if (dist > 3) anims.Play("run");
-        else
-        {
-            if(anims.Play("attack02"))
-            {
-                RaycastHit ray = RayCast.Raycast(transform, player, 3);
+          switch (state)
+          {
+               case AIState.ATTACK:
+                    if (!animation.IsPlaying("attack02")) animation.Play("attack02");
 
-                if(ray.transform.gameObject.tag == "Player")
-                {
-                    Debug.Log("hit player");
-                    playerScript.TakeDamage(100);
-                }
-            }
-        }
-        ai.canMove = (dist > 3);
-    }
+                    RaycastHit ray = RayCast.Raycast(transform, player, 3);
 
-    public void TakeDamage()
-    {
-        anims.Play("damage02");
-        ai.canMove = false;
+                    if (ray.transform.gameObject.tag == "Player")
+                    {
+                         playerScript.TakeDamage(50);
+                    }
+                    ai.canMove = false;
+                    break;
+               case AIState.CHASE:
+                    ai.canMove = true;
+                    ai.canSearch = true;
+                    if (!animation.IsPlaying("run")) animation.Play("run");
+                    break;
+               case AIState.WALK_AROUND:
+                    // to do
+                    animation.PlayQueued("walk02");
+                    ai.canSearch = false;
+                    break;
+               case AIState.DEAD:
+                    if (!dead) { animation.Play("death"); dead = true; }
+                    ai.canSearch = false;
+                    break;
+               case AIState.IDLE:
+                    if (!animation.IsPlaying("idle")) animation.Play("idle");
+                    ai.canSearch = false;
+                    break;
+          }
+     }
 
-        health -= Random.Range(30, 50);
-    }
+     public AIState getState()
+     {
+          float dist = Vector3.Distance(this.transform.position, player.position);
 
-    public bool isDead() { return dead; }
+          //if (dist > 10 && health > 0) return AIState.WALK_AROUND;
+          if (dist > 3 && dist < 10 && health > 0) return AIState.CHASE;
+          if (dist < 3 && health > 0) return AIState.ATTACK;
+          if (health <= 0) return AIState.DEAD;
+
+          return AIState.IDLE;
+     }
+
+     public void TakeDamage(int damage)
+     {
+          animation.Play("damage02");
+          ai.canMove = false;
+
+          health -= damage;
+     }
+
+     public bool isDead() { return dead; }
 }
